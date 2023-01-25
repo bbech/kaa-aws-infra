@@ -21,4 +21,4 @@ jobs:
       # Build inside Docker containers
       - run: sam build --use-container
       # Prevent prompts and failure when the stack is unchanged
-      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name kaa-infra --s3-bucket aws-sam-cli-managed-default-samclisourcebucket-g9b5llh3mne9 --s3-prefix kaa-infra --capabilities CAPABILITY_NAMED_IAM
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset ${{ secrets.AWS_SAMCONFIG }}
