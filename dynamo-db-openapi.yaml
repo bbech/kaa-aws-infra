@@ -1,0 +1,210 @@
+openapi: 3.0.2
+info:
+  title:
+    Workflows Api 
+  description:
+    Workflows api to CRUD data to DynamoDB (Quotes)
+  version: 1.0.0
+paths:
+
+# Quotes API
+  /quotes:
+    options:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        '200':
+          description: 200 response
+          schema:
+            "$ref": "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+            Access-Control-Allow-Methods:
+              type: string
+            Access-Control-Allow-Headers:
+              type: string
+      x-amazon-apigateway-integration:
+        requestTemplates:
+          application/json: '{"statusCode": 200}'
+        passthroughBehavior: when_no_match
+        responses:
+          default:
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS,POST'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-LastEvaluatedKey'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            statusCode: '200'
+        type: mock
+
+    post:
+      consumes:
+        - 'application/json'
+      produces:
+        - 'application/json'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Quote'
+      responses:
+        200:
+          schema:
+            $ref: '#/components/responses/Quote'
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+      security:
+        - quoteAuthorizer: []
+      x-amazon-apigateway-integration:
+        description: Add a new Quote to the database
+        credentials:  { 'Fn::GetAtt': APItoDBRole.Arn }
+        uri: { 'Fn::Sub': 'arn:aws:apigateway:${AWS::Region}:dynamodb:action/PutItem' }
+        requestTemplates:
+          application/json: 
+            Fn::Sub:
+              - |- 
+                { 
+                  "TableName": "${tableName}",
+                  "Item": {
+                    "id": {
+                      "S": "$context.requestId"
+                    },
+                    "created": {
+                      "N": "$context.requestTimeEpoch"
+                    },
+                    "modified": {
+                      "N": "$context.requestTimeEpoch"
+                    },
+                    "character": {
+                      "S": "$input.path("$.character")"
+                    },
+                    "episode": {
+                      "S": "$input.path("$.episode")"
+                    },
+                    "file": {
+                      "S": "$input.path("$.file")"
+                    },
+                    "title": {
+                      "S": "$input.path("$.title")"
+                    }
+                  }
+                }
+              - { tableName: { Ref: KaaQuotesTable } }
+        responses:
+          default:
+            statusCode: 200
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+              application/json: '#set($inputRoot = $input.path("$"))
+                {
+                    "id": "$context.requestId"
+                }'
+        passthroughBehavior: 'when_no_match'
+        httpMethod: POST
+        type: AWS
+
+    get:
+      consumes:
+        - 'application/json'
+      produces:
+        - 'application/json'
+      responses:
+        200:
+          schema:
+            $ref: '#/components/responses/Quote'
+          headers:
+            Access-Control-Allow-Origin:
+              type: string
+      security:
+        - quoteAuthorizer: []
+      x-amazon-apigateway-integration:
+        description: Retrieve a specific Quote from the database 
+        credentials:  { 'Fn::GetAtt': APItoDBRole.Arn }
+        uri: { 'Fn::Sub': 'arn:aws:apigateway:${AWS::Region}:dynamodb:action/Scan' }
+        requestTemplates:
+          application/json:
+            Fn::Sub: 
+              - |-
+                { 
+                  "TableName": "${tableName}"
+                }
+              - { tableName: { Ref: KaaQuotesTable } }
+        responses:
+          default:
+            statusCode: 200
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+            responseTemplates:
+                application/json: '#set($inputRoot = $input.path("$"))
+                          {
+                            "applications": [
+                              #foreach($elem in $inputRoot.Items) {
+                                "uuid": "$elem.id.S",
+                                "created": "$elem.created.N",
+                                "modified": "$elem.modified.N",
+                                "character": "$elem.character.S",
+                                "episode": "$elem.episode.S",
+                                "file": "$elem.file.S",
+                                "title": "$elem.title.S"
+                              }#if($foreach.hasNext),#end
+                              #end
+                            ]
+                          }'
+        passthroughBehavior: "when_no_match"
+        httpMethod: POST
+        type: AWS
+
+components:
+  securitySchemes: 
+    quoteAuthorizer :
+      type : "apiKey"
+      name : "Authorization"
+      in : "header"
+      x-amazon-apigateway-authtype : 'custom'
+      x-amazon-apigateway-authorizer : 
+        type : 'request'
+        identitySource : 'method.request.header.Authorization'
+        authorizerCredentials : { 'Fn::GetAtt': ApiKeyAuthorizerRole.Arn }
+        authorizerUri : { 'Fn::Join' : ['', ['arn:aws:apigateway:', { 'Ref' : 'AWS::Region' }, ':lambda:path/2015-03-31/functions/', { 'Fn::GetAtt': ApiKeyLambda.Arn }, '/invocations'] ] }
+        authorizerResultTtlInSeconds : 3600
+
+  schemas:
+    Empty:
+      type: object
+      description: Empty Schema
+    Quote:
+      type: object
+      description: Quote
+      properties:
+        id:
+          type: string
+        character:
+          type: string
+        episode:
+          type: string
+        file:
+          type: string
+        title:
+          type: string
+  responses:
+    Quote:
+      description: Quote
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              id:
+                type: string
+              character:
+                type: string
+              episode:
+                type: string
+              file:
+                type: string
+              title:
+                type: string
