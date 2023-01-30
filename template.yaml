@@ -273,7 +273,7 @@ Resources:
   ApiLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: EADV/API
+      LogGroupName: KaaQuote/API
       RetentionInDays: 7
 
   # IAM Role for API Gateway to put logs in the CW log-group (https://gist.github.com/villasv/4f5b62a772abe2c06525356f80299048)
