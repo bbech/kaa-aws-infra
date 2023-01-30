@@ -7,6 +7,9 @@ Description: >
 
 Resources:
   
+  ################################################
+  # S3 Bucket pour deployement de l'app React #
+  ################################################
   FrontendBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -18,260 +21,260 @@ Resources:
         IgnorePublicAcls: True
         RestrictPublicBuckets: True
 
-  # OAI makes it possible for CloudFront to access a private S3 bucket. (see example in https://stackoverflow.com/questions/55496081/how-to-resolve-specified-origin-access-identity-does-not-exist-or-is-not-valid)
-  FrontendDistributionOAI:
-    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-    Properties:
-      CloudFrontOriginAccessIdentityConfig:
-        Comment: 'access-frontend.s3.amazonaws.com'
+#   # OAI makes it possible for CloudFront to access a private S3 bucket. (see example in https://stackoverflow.com/questions/55496081/how-to-resolve-specified-origin-access-identity-does-not-exist-or-is-not-valid)
+#   FrontendDistributionOAI:
+#     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+#     Properties:
+#       CloudFrontOriginAccessIdentityConfig:
+#         Comment: 'access-frontend.s3.amazonaws.com'
 
-  FrontendDistribution:
-    Type: AWS::CloudFront::Distribution
-    Properties: 
-      DistributionConfig:
-        Aliases:
-        - aws-demo.bech.fr
-        DefaultCacheBehavior:
-          # Are we sure about no caching?
-          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # identifier for 'CachingDisabled' policy (see https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html). 
-          TargetOriginId: kaaFrontendDistOrigin
-          ViewerProtocolPolicy: redirect-to-https
-        DefaultRootObject: index.html
-        Enabled: True
-        Origins:
-        - DomainName: !GetAtt FrontendBucket.RegionalDomainName
-          Id: kaaFrontendDistOrigin
-          S3OriginConfig:
-            OriginAccessIdentity: !Join ['', ['origin-access-identity/cloudfront/', !Ref FrontendDistributionOAI]]
-        ViewerCertificate:
-          AcmCertificateArn: arn:aws:acm:us-east-1:718566411914:certificate/63121fa7-a0c0-49bc-a5a1-7f9b4903201e
-          MinimumProtocolVersion: TLSv1
-          SslSupportMethod: sni-only
-          # !Ref "AWS::NoValue"
-        CustomErrorResponses:
-        - ErrorCode: '404'
-          ResponsePagePath: "/index.html"
-          ResponseCode: '200'
-          ErrorCachingMinTTL: '30'
-        - ErrorCode: '403'
-          ResponsePagePath: "/index.html"
-          ResponseCode: '200'
-          ErrorCachingMinTTL: '30'
+#   FrontendDistribution:
+#     Type: AWS::CloudFront::Distribution
+#     Properties: 
+#       DistributionConfig:
+#         Aliases:
+#         - aws-demo.bech.fr
+#         DefaultCacheBehavior:
+#           # Are we sure about no caching?
+#           CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # identifier for 'CachingDisabled' policy (see https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html). 
+#           TargetOriginId: kaaFrontendDistOrigin
+#           ViewerProtocolPolicy: redirect-to-https
+#         DefaultRootObject: index.html
+#         Enabled: True
+#         Origins:
+#         - DomainName: !GetAtt FrontendBucket.RegionalDomainName
+#           Id: kaaFrontendDistOrigin
+#           S3OriginConfig:
+#             OriginAccessIdentity: !Join ['', ['origin-access-identity/cloudfront/', !Ref FrontendDistributionOAI]]
+#         ViewerCertificate:
+#           AcmCertificateArn: arn:aws:acm:us-east-1:718566411914:certificate/63121fa7-a0c0-49bc-a5a1-7f9b4903201e
+#           MinimumProtocolVersion: TLSv1
+#           SslSupportMethod: sni-only
+#           # !Ref "AWS::NoValue"
+#         CustomErrorResponses:
+#         - ErrorCode: '404'
+#           ResponsePagePath: "/index.html"
+#           ResponseCode: '200'
+#           ErrorCachingMinTTL: '30'
+#         - ErrorCode: '403'
+#           ResponsePagePath: "/index.html"
+#           ResponseCode: '200'
+#           ErrorCachingMinTTL: '30'
 
-  FrontendBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref FrontendBucket
-      PolicyDocument:
-        Statement:
-        - Action: s3:GetObject
-          Effect: Allow
-          Principal:
-            CanonicalUser: !GetAtt FrontendDistributionOAI.S3CanonicalUserId
-          Resource: !Sub "${FrontendBucket.Arn}/*"
-        - Action:
-          - s3:GetObject
-          - s3:PutObjectAcl
-          - s3:GetObject
-          - s3:GetObjectAcl
-          - s3:DeleteObject
-          Effect: Allow
-          Principal:
-            AWS: !GetAtt  FrontendDeploymentUser.Arn
-          Resource: !Sub "${FrontendBucket.Arn}/*"
+#   FrontendBucketPolicy:
+#     Type: AWS::S3::BucketPolicy
+#     Properties:
+#       Bucket: !Ref FrontendBucket
+#       PolicyDocument:
+#         Statement:
+#         - Action: s3:GetObject
+#           Effect: Allow
+#           Principal:
+#             CanonicalUser: !GetAtt FrontendDistributionOAI.S3CanonicalUserId
+#           Resource: !Sub "${FrontendBucket.Arn}/*"
+#         - Action:
+#           - s3:GetObject
+#           - s3:PutObjectAcl
+#           - s3:GetObject
+#           - s3:GetObjectAcl
+#           - s3:DeleteObject
+#           Effect: Allow
+#           Principal:
+#             AWS: !GetAtt  FrontendDeploymentUser.Arn
+#           Resource: !Sub "${FrontendBucket.Arn}/*"
 
-  FrontendDeploymentUser:
-    Type: AWS::IAM::User
-    Properties: 
-      UserName: FrontendDeploymentUser
-      ManagedPolicyArns:
-      - arn:aws:iam::aws:policy/AmazonS3FullAccess
+#   FrontendDeploymentUser:
+#     Type: AWS::IAM::User
+#     Properties: 
+#       UserName: FrontendDeploymentUser
+#       ManagedPolicyArns:
+#       - arn:aws:iam::aws:policy/AmazonS3FullAccess
   
-  FrontendDeploymentUserAccessKey:
-    Type: AWS::IAM::AccessKey
-    DependsOn:
-    - FrontendDeploymentUser
-    Properties:
-      UserName: FrontendDeploymentUser
+#   FrontendDeploymentUserAccessKey:
+#     Type: AWS::IAM::AccessKey
+#     DependsOn:
+#     - FrontendDeploymentUser
+#     Properties:
+#       UserName: FrontendDeploymentUser
 
-  FrontendDnsAlias:
-    Type: AWS::Route53::RecordSet
-    Properties: 
-      AliasTarget: 
-        DNSName: !GetAtt FrontendDistribution.DomainName
-        HostedZoneId: Z2FDTNDATAQYW2 # this is the HostedZoneId for any CLoudFront distribution in AWS. see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
-      HostedZoneId: Z08910752HFZPXSGDCDKY
-      Name: aws-demo.bech.fr
-      Type: A
-
-
-  ################################################
-  # Zone DNS pour API  Api GAteway #
-  ################################################
-
-  Certificate:
-    Type: AWS::CertificateManager::Certificate
-    Description: The custom certificate to be used by API Gateway to encrypt the traffic when accessed through the domain-name alias(manage TLS/HTTPS protocol). This certificate is required as a certificate uses the domain-name as part of its identity.
-    Properties:
-      DomainName: api.aws-demo.bech.fr
-      DomainValidationOptions:
-      - DomainName: api.aws-demo.bech.fr
-        HostedZoneId: Z08910752HFZPXSGDCDKY
-      ValidationMethod: DNS # this validation mode makes it possible to enable the certificate from the AWS console. It requires a mnual step for that.
-
-  # example: https://scratchpad.blog/serverless/howto/configure-a-custom-domain-for-aws-api-gateway/
-  ApiCustomDomainName:
-    Type: AWS::ApiGateway::DomainName
-    Description: The custom Domain name use as an alias for reaching the API Gateway.
-    Properties:
-      DomainName: api.aws-demo.bech.fr
-      EndpointConfiguration:
-        Types:
-        - REGIONAL
-      RegionalCertificateArn: !Ref Certificate
-
-  ApiDnsAlias:
-    Type: AWS::Route53::RecordSet
-    Properties: 
-      AliasTarget: 
-        DNSName: !GetAtt ApiCustomDomainName.RegionalDomainName
-        HostedZoneId: !GetAtt ApiCustomDomainName.RegionalHostedZoneId
-      HostedZoneId: Z08910752HFZPXSGDCDKY
-      Name: api.aws-demo.bech.fr
-      Type: A
+#   FrontendDnsAlias:
+#     Type: AWS::Route53::RecordSet
+#     Properties: 
+#       AliasTarget: 
+#         DNSName: !GetAtt FrontendDistribution.DomainName
+#         HostedZoneId: Z2FDTNDATAQYW2 # this is the HostedZoneId for any CLoudFront distribution in AWS. see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-aliastarget.html
+#       HostedZoneId: Z08910752HFZPXSGDCDKY
+#       Name: aws-demo.bech.fr
+#       Type: A
 
 
-  ################################################
-  # API KEY lambda for authorization #
-  ################################################
-  ApiKeyLambda:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
-    Description: Lambda Function that will verify apikey for authentication.
-    Properties:
-      AutoPublishAlias: live
-      CodeUri: apikey-authorize/
-      DeploymentPreference:
-        Type: AllAtOnce
-      Handler: app.handler
-      Runtime: nodejs14.x
-      Architectures:
-        - x86_64
+#   ################################################
+#   # Zone DNS pour API  Api GAteway #
+#   ################################################
 
-  ApiKeyAuthorizerRole:
-    Type: AWS::IAM::Role
-    Description: Role for API Gateway to be able to invoke the JMT identity provider Lambda.
-    Properties:
-      RoleName: ApiKeyAuthorizerRole
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Action:
-              - sts:AssumeRole
-            Effect: Allow
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-                - apigateway.amazonaws.com
-      Policies:
-        - PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource: '*'
-          PolicyName: ApiKeyAuthorizerLambdaPolicy
+#   Certificate:
+#     Type: AWS::CertificateManager::Certificate
+#     Description: The custom certificate to be used by API Gateway to encrypt the traffic when accessed through the domain-name alias(manage TLS/HTTPS protocol). This certificate is required as a certificate uses the domain-name as part of its identity.
+#     Properties:
+#       DomainName: api.aws-demo.bech.fr
+#       DomainValidationOptions:
+#       - DomainName: api.aws-demo.bech.fr
+#         HostedZoneId: Z08910752HFZPXSGDCDKY
+#       ValidationMethod: DNS # this validation mode makes it possible to enable the certificate from the AWS console. It requires a mnual step for that.
 
-  ################################################
-  # DynamoDB Table  #
-  ################################################
+#   # example: https://scratchpad.blog/serverless/howto/configure-a-custom-domain-for-aws-api-gateway/
+#   ApiCustomDomainName:
+#     Type: AWS::ApiGateway::DomainName
+#     Description: The custom Domain name use as an alias for reaching the API Gateway.
+#     Properties:
+#       DomainName: api.aws-demo.bech.fr
+#       EndpointConfiguration:
+#         Types:
+#         - REGIONAL
+#       RegionalCertificateArn: !Ref Certificate
 
-  KaaQuotesTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      TableName: kaa-quote
-      TableClass: STANDARD_INFREQUENT_ACCESS
-      AttributeDefinitions:
-        - AttributeName: id
-          AttributeType: S
-      KeySchema:
-        - AttributeName: id
-          KeyType: HASH
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+#   ApiDnsAlias:
+#     Type: AWS::Route53::RecordSet
+#     Properties: 
+#       AliasTarget: 
+#         DNSName: !GetAtt ApiCustomDomainName.RegionalDomainName
+#         HostedZoneId: !GetAtt ApiCustomDomainName.RegionalHostedZoneId
+#       HostedZoneId: Z08910752HFZPXSGDCDKY
+#       Name: api.aws-demo.bech.fr
+#       Type: A
 
-  APItoDBRole:
-    Type: 'AWS::IAM::Role'
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Action:
-              - 'sts:AssumeRole'
-            Effect: Allow
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-      Policies:
-        - PolicyName: APIGatewayDynamoDBPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - 'dynamodb:PutItem'
-                  - 'dynamodb:UpdateItem'
-                  - 'dynamodb:DeleteItem'
-                  - 'dynamodb:GetItem'
-                  - 'dynamodb:Query'
-                  - 'dynamodb:Scan'
-                  # - 'dynamodb:BatchExecuteStatement'
-                  # - 'dynamodb:PartiQLInsert'
-                  # - 'dynamodb:PartiQLUpdate'
-                  # - 'dynamodb:PartiQLDelete'
-                # Including * in the resource Arn allows access to the DynamoDB table and indexes
-                Resource: '*'
 
-  ApiToDynamoDb:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: default
-      OpenApiVersion: 3.0.2
-      DefinitionBody:
-        Fn::Transform:
-          Name: AWS::Include
-          Parameters:
-            Location: dynamo-db-openapi.yaml
+#   ################################################
+#   # API KEY lambda for authorization #
+#   ################################################
+#   ApiKeyLambda:
+#     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+#     Description: Lambda Function that will verify apikey for authentication.
+#     Properties:
+#       AutoPublishAlias: live
+#       CodeUri: apikey-authorize/
+#       DeploymentPreference:
+#         Type: AllAtOnce
+#       Handler: app.handler
+#       Runtime: nodejs14.x
+#       Architectures:
+#         - x86_64
 
-  ApiToDynamoDbPathMapping:
-    Type: AWS::ApiGatewayV2::ApiMapping
-    Description: The KAA Quote API mapping.
-    DependsOn:
-      - ApiToDynamoDb
-    Properties:
-      ApiId : !Ref ApiToDynamoDb
-      ApiMappingKey : "quotes"
-      DomainName : api.aws-demo.bech.fr
-      Stage : !Ref ApiToDynamoDb.Stage
+#   ApiKeyAuthorizerRole:
+#     Type: AWS::IAM::Role
+#     Description: Role for API Gateway to be able to invoke the JMT identity provider Lambda.
+#     Properties:
+#       RoleName: ApiKeyAuthorizerRole
+#       AssumeRolePolicyDocument:
+#         Version: 2012-10-17
+#         Statement:
+#           - Action:
+#               - sts:AssumeRole
+#             Effect: Allow
+#             Principal:
+#               Service:
+#                 - lambda.amazonaws.com
+#                 - apigateway.amazonaws.com
+#       Policies:
+#         - PolicyDocument:
+#             Version: 2012-10-17
+#             Statement:
+#               - Effect: Allow
+#                 Action:
+#                   - lambda:InvokeFunction
+#                 Resource: '*'
+#           PolicyName: ApiKeyAuthorizerLambdaPolicy
 
-Outputs:
-  S3BucketArn:
-    Description: "The S3 bucket ARN"
-    Value: !GetAtt FrontendBucket.Arn
+#   ################################################
+#   # DynamoDB Table  #
+#   ################################################
+
+#   KaaQuotesTable:
+#     Type: AWS::DynamoDB::Table
+#     Properties:
+#       TableName: kaa-quote
+#       TableClass: STANDARD_INFREQUENT_ACCESS
+#       AttributeDefinitions:
+#         - AttributeName: id
+#           AttributeType: S
+#       KeySchema:
+#         - AttributeName: id
+#           KeyType: HASH
+#       ProvisionedThroughput:
+#         ReadCapacityUnits: 1
+#         WriteCapacityUnits: 1
+
+#   APItoDBRole:
+#     Type: 'AWS::IAM::Role'
+#     Properties:
+#       AssumeRolePolicyDocument:
+#         Version: 2012-10-17
+#         Statement:
+#           - Action:
+#               - 'sts:AssumeRole'
+#             Effect: Allow
+#             Principal:
+#               Service:
+#                 - apigateway.amazonaws.com
+#       Policies:
+#         - PolicyName: APIGatewayDynamoDBPolicy
+#           PolicyDocument:
+#             Version: 2012-10-17
+#             Statement:
+#               - Effect: Allow
+#                 Action:
+#                   - 'dynamodb:PutItem'
+#                   - 'dynamodb:UpdateItem'
+#                   - 'dynamodb:DeleteItem'
+#                   - 'dynamodb:GetItem'
+#                   - 'dynamodb:Query'
+#                   - 'dynamodb:Scan'
+#                   # - 'dynamodb:BatchExecuteStatement'
+#                   # - 'dynamodb:PartiQLInsert'
+#                   # - 'dynamodb:PartiQLUpdate'
+#                   # - 'dynamodb:PartiQLDelete'
+#                 # Including * in the resource Arn allows access to the DynamoDB table and indexes
+#                 Resource: '*'
+
+#   ApiToDynamoDb:
+#     Type: AWS::Serverless::Api
+#     Properties:
+#       StageName: default
+#       OpenApiVersion: 3.0.2
+#       DefinitionBody:
+#         Fn::Transform:
+#           Name: AWS::Include
+#           Parameters:
+#             Location: dynamo-db-openapi.yaml
+
+#   ApiToDynamoDbPathMapping:
+#     Type: AWS::ApiGatewayV2::ApiMapping
+#     Description: The KAA Quote API mapping.
+#     DependsOn:
+#       - ApiToDynamoDb
+#     Properties:
+#       ApiId : !Ref ApiToDynamoDb
+#       ApiMappingKey : "quotes"
+#       DomainName : api.aws-demo.bech.fr
+#       Stage : !Ref ApiToDynamoDb.Stage
+
+# Outputs:
+#   S3BucketArn:
+#     Description: "The S3 bucket ARN"
+#     Value: !GetAtt FrontendBucket.Arn
   
-  FrontendDeploymentUserArn:
-    Description: "The Frontenf deployment IAM user ARN"
-    Value: !GetAtt FrontendDeploymentUser.Arn
+#   FrontendDeploymentUserArn:
+#     Description: "The Frontenf deployment IAM user ARN"
+#     Value: !GetAtt FrontendDeploymentUser.Arn
 
-  FrontendDeploymentUserAccessKey:
-    Description: "The Frontenf deployment IAM user access key"
-    Value: !Ref FrontendDeploymentUserAccessKey
+#   FrontendDeploymentUserAccessKey:
+#     Description: "The Frontenf deployment IAM user access key"
+#     Value: !Ref FrontendDeploymentUserAccessKey
 
-  FrontendDeploymentUserSecret:
-    Description: "The Frontenf deployment IAM user access secret"
-    Value: !GetAtt FrontendDeploymentUserAccessKey.SecretAccessKey
+#   FrontendDeploymentUserSecret:
+#     Description: "The Frontenf deployment IAM user access secret"
+#     Value: !GetAtt FrontendDeploymentUserAccessKey.SecretAccessKey
 
-  FrontendDistributionDomainName:
-    Description: the default domain_name for the distribution
-    Value: !GetAtt FrontendDistribution.DomainName
+#   FrontendDistributionDomainName:
+#     Description: the default domain_name for the distribution
+#     Value: !GetAtt FrontendDistribution.DomainName
