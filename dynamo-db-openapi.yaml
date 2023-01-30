@@ -1,9 +1,9 @@
 openapi: 3.0.2
 info:
   title:
-    Workflows Api 
+    KAA Quotes Api 
   description:
-    Workflows api to CRUD data to DynamoDB (Quotes)
+    KAA Quotes api to CRUD data to DynamoDB (Quotes)
   version: 1.0.0
 paths:
 
