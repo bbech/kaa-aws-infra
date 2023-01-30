@@ -8,7 +8,7 @@ info:
 paths:
 
 # Quotes API
-  /quotes:
+  /:
     options:
       consumes:
         - application/json

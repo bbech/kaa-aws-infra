@@ -246,12 +246,12 @@ Resources:
 
   ApiToDynamoDbPathMapping:
     Type: AWS::ApiGatewayV2::ApiMapping
-    Description: The Workflow API mapping.
+    Description: The KAA Quote API mapping.
     DependsOn:
       - ApiToDynamoDb
     Properties:
       ApiId : !Ref ApiToDynamoDb
-      ApiMappingKey : "workflow"
+      ApiMappingKey : "quotes"
       DomainName : api.aws-demo.bech.fr
       Stage : !Ref ApiToDynamoDb.Stage
 
