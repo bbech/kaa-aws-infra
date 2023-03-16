@@ -121,7 +121,7 @@ Resources:
         HostedZoneId: Z08910752HFZPXSGDCDKY
       ValidationMethod: DNS # this validation mode makes it possible to enable the certificate from the AWS console. It requires a mnual step for that.
 
-  # example: https://scratchpad.blog/serverless/howto/configure-a-custom-domain-for-aws-api-gateway/
+#   # example: https://scratchpad.blog/serverless/howto/configure-a-custom-domain-for-aws-api-gateway/
   ApiCustomDomainName:
     Type: AWS::ApiGateway::DomainName
     Description: The custom Domain name use as an alias for reaching the API Gateway.
@@ -143,9 +143,9 @@ Resources:
       Type: A
 
 
-#   ################################################
-#   # API KEY lambda for authorization #
-#   ################################################
+# #   ################################################
+# #   # API KEY lambda for authorization #
+# #   ################################################
   ApiKeyLambda:
     Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
     Description: Lambda Function that will verify apikey for authentication.
@@ -184,9 +184,9 @@ Resources:
                 Resource: '*'
           PolicyName: ApiKeyAuthorizerLambdaPolicy
 
-#   ################################################
-#   # DynamoDB Table  #
-#   ################################################
+# #   ################################################
+# #   # DynamoDB Table  #
+# #   ################################################
 
   KaaQuotesTable:
     Type: AWS::DynamoDB::Table
@@ -260,10 +260,10 @@ Resources:
       DomainName : api.aws-demo.bech.fr
       Stage : !Ref ApiToDynamoDb.Stage
 
-  ###############
-  # access logs #
-  ###############
-  # One shot configuration required to enable CloudWatch logging from API Gateway... WTF?!
+#   ###############
+#   # access logs #
+#   ###############
+#   # One shot configuration required to enable CloudWatch logging from API Gateway... WTF?!
   ApiGwAccountConfig:
     Type: "AWS::ApiGateway::Account"
     Properties:
@@ -276,7 +276,7 @@ Resources:
       LogGroupName: KaaQuote/API
       RetentionInDays: 7
 
-  # IAM Role for API Gateway to put logs in the CW log-group (https://gist.github.com/villasv/4f5b62a772abe2c06525356f80299048)
+#   # IAM Role for API Gateway to put logs in the CW log-group (https://gist.github.com/villasv/4f5b62a772abe2c06525356f80299048)
   ApiLogGroupRole:
     Type: AWS::IAM::Role
     Properties:
